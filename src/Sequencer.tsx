@@ -73,7 +73,7 @@ export default function Sequencer() {
   return (
     <>
       <button onClick={() => setPaused(!isPaused)}>
-        {isPaused ? "Play" : "Pause"}
+        {isPaused ? "▶️" : "⏸"}
       </button>
       BPM:{" "}
       <input
@@ -90,8 +90,7 @@ export default function Sequencer() {
         <code>@sine</code>
       </p>
       <p>
-        Change the number of ticks by using e.g. <code>s32</code> (this one is
-        pretty buggy)
+        Change the number of ticks by using e.g. <code>s32</code>
       </p>
       <table>
         <tbody>
@@ -100,8 +99,12 @@ export default function Sequencer() {
           ))}
         </tbody>
       </table>
-      <button onClick={() => addRow()}>Add Row</button>
+      <button onClick={() => addRow()}>Add Sequencer Row</button>
       <h3>Keyboard</h3>
+      <p>
+        Synths connected to keyboard:{" "}
+        {synths.filter((s) => s.keyboardEnabled).length}
+      </p>
       <Keyboard
         onAttack={(note) => {
           synths

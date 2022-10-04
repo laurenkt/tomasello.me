@@ -79,9 +79,12 @@ export function SynthRow({
       <th>
         <button
           onClick={() => (synth.keyboardEnabled = !synth.keyboardEnabled)}
-          style={{ fontWeight: synth.keyboardEnabled ? "bold" : "normal" }}
+          style={{
+            fontWeight: synth.keyboardEnabled ? "bold" : "normal",
+            backgroundColor: synth.keyboardEnabled ? "blue" : "transparent",
+          }}
         >
-          Keyboard
+          {synth.keyboardEnabled ? "Disconnect" : "Connect to Keyboard"}
         </button>
       </th>
       {synth.sequence.slice(0, synth.steps).map((enabled, t) => (
