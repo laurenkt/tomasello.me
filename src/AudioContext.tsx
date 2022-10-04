@@ -1,19 +1,31 @@
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import * as Tone from "tone";
 
 export function AudioContext(props: { children: any }) {
   const [isActivated, setActivated] = useState(false);
 
-  async function activateAudioContext() {
-    await Tone.start();
-    setActivated(true);
-  }
+  const onActivate = useCallback((e: any) => {
+    e.preventDefault();
+    Tone.start().then(() => {
+      setActivated(true);
+    });
+  }, []);
+
+  useEffect(() => {
+    window.addEventListener("keydown", onActivate);
+    return () => {
+      window.removeEventListener("keydown", onActivate);
+    };
+  }, []);
 
   if (!isActivated) {
     return (
       <p>
-        Please activate audio context{" "}
-        <button onClick={activateAudioContext}>by clicking here</button>
+        <button onClick={onActivate}>
+          <strong>Click/press any key to start</strong>
+          <br />
+          (Browser enforces that audio context must be triggered by user action)
+        </button>
       </p>
     );
   } else {

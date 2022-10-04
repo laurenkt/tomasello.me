@@ -72,8 +72,27 @@ export default function Sequencer() {
 
   return (
     <>
+      <h3>Tips</h3>
+      <ul>
+        <li>
+          Input like <code>C4/8n</code> means play a C4 eighth note
+        </li>
+        <li>
+          Try changing instrument by using <code>@duo</code>,{" "}
+          <code>@membrane</code>, <code>@am</code>, <code>@fm</code>,{" "}
+          <code>@sine</code>
+        </li>
+        <li>
+          Change the number of ticks by using e.g. <code>s32</code> — they don't
+          have to match
+        </li>
+        <li>
+          Set the gain by adding <code>90%</code>
+        </li>
+      </ul>
+      <h3>Sequencer</h3>
       <button onClick={() => setPaused(!isPaused)}>
-        {isPaused ? "▶️" : "⏸"}
+        {isPaused ? "▶️ Play" : "⏸ Pause"}
       </button>
       BPM:{" "}
       <input
@@ -81,17 +100,6 @@ export default function Sequencer() {
         value={bpm}
         onChange={(e) => setBpm(+e.target.value)}
       />
-      <p>
-        Input like <code>C4/8n</code> means play a C4 eighth note
-      </p>
-      <p>
-        Try changing instrument by using <code>@duo</code>,{" "}
-        <code>@membrane</code>, <code>@am</code>, <code>@fm</code>,{" "}
-        <code>@sine</code>
-      </p>
-      <p>
-        Change the number of ticks by using e.g. <code>s32</code>
-      </p>
       <table>
         <tbody>
           {synths.map((synth, idx) => (
@@ -113,7 +121,7 @@ export default function Sequencer() {
               synth.toneSynth.triggerAttack(note);
             });
         }}
-        onRelease={(note) => {
+        onRelease={() => {
           synths
             .filter((s) => s.keyboardEnabled)
             .forEach((synth) => {
