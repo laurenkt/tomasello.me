@@ -1,11 +1,10 @@
 import { AudioContext } from "./AudioContext";
-import "./App.css";
-import Sequencer from "./Sequencer";
+import Workstation from "./Workstation";
 
 function App() {
   return (
     <AudioContext>
-      <Sequencer />
+      <Workstation />
     </AudioContext>
   );
 }

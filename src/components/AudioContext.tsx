@@ -12,11 +12,14 @@ export function AudioContext(props: { children: any }) {
   }, []);
 
   useEffect(() => {
+    if (isActivated) {
+      return;
+    }
     window.addEventListener("keydown", onActivate);
     return () => {
       window.removeEventListener("keydown", onActivate);
     };
-  }, []);
+  }, [isActivated]);
 
   if (!isActivated) {
     return (
