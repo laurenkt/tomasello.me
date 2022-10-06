@@ -45,19 +45,25 @@ export default function Workstation() {
         },
       },
     ];
-    setSequencers(sequencers.concat(delta));
+    setSequencers((s) => s.concat(delta));
   }, [sequencers]);
 
   function onChangeSequencer(idx: number, next: SequencerState) {
     const replacement = [...sequencers];
     replacement[idx] = next;
-    setSequencers(replacement);
+    setSequencers((s) => {
+      const copy: SequencerState[] = structuredClone(s);
+      copy[idx] = next;
+      return copy;
+    });
   }
 
   useEffect(() => {
-    audioPipeline = new AudioPipeline({
-      onCounterIncrement: setGlobalStepIncrement,
-    });
+    if (!audioPipeline) {
+      audioPipeline = new AudioPipeline({
+        onCounterIncrement: setGlobalStepIncrement,
+      });
+    }
   }, []);
 
   useEffect(() => {
