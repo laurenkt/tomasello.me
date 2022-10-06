@@ -66,23 +66,18 @@ export default function Workstation() {
 
   const [activeKeys, setActiveKeys] = useState(range(12).map(() => false));
 
+  function setAtIndex(to: boolean, bools: boolean[], idx: number): boolean[] {
+    const copy = [...bools];
+    copy[idx] = to;
+    return copy;
+  }
+
   const setActiveKey = (degree: number) => {
-    console.log("setActiveKey", degree, activeKeys);
-    if (!activeKeys[degree]) {
-      const copy = [...activeKeys];
-      copy[degree] = true;
-      console.log("settingActiveKeys", copy);
-      setActiveKeys(copy);
-    }
+    setActiveKeys((activeKeys) => setAtIndex(true, activeKeys, degree));
   };
 
   const removeActiveKey = (degree: number) => {
-    console.log("removeActiveKey", degree, activeKeys);
-    if (activeKeys[degree]) {
-      const copy = [...activeKeys];
-      copy[degree] = false;
-      setActiveKeys(copy);
-    }
+    setActiveKeys((activeKeys) => setAtIndex(false, activeKeys, degree));
   };
 
   useEffect(() => {
