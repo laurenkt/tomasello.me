@@ -1,4 +1,4 @@
-export interface SynthState {
+export interface InstrumentConfig {
   duration: string;
   note: string;
   type: string;

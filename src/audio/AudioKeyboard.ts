@@ -1,6 +1,6 @@
 import { AudioPipeline } from "./AudioPipeline";
 import { range } from "../range";
-import { SynthState } from "../models/SynthState";
+import { InstrumentConfig } from "../models/InstrumentConfig";
 import { AudioInstrument } from "./AudioInstrument";
 
 const keysOnKeyboard = 12;
@@ -11,7 +11,7 @@ export class AudioKeyboard {
 
   constructor() {}
 
-  setSynths(synthState: SynthState): void {}
+  setSynths(synthState: InstrumentConfig): void {}
 
   setKeys(keys: boolean[]): void {
     for (let i = 0; i++; i < keysOnKeyboard) {

@@ -1,13 +1,10 @@
 import { ChangeEvent, useCallback, useState } from "react";
-import { SequencerState } from "../models/SequencerState";
+import { SequencerConfig } from "../models/SequencerConfig";
 import { Track } from "../models/Track";
 import { range } from "../range";
 
-function produceEditedSequencer(
-  sequencer: SequencerState,
-  newInput: string
-): SequencerState {
-  const next: SequencerState = structuredClone(sequencer);
+function produceEditedTrack(track: Track, newInput: string): Track {
+  const next: Track = structuredClone(track);
 
   const noteDurationPattern = new RegExp(
     /(?<note>[^\W]+)\/(?<duration>[^\W]+)\b$/gi
@@ -15,8 +12,8 @@ function produceEditedSequencer(
   for (let match of newInput.matchAll(noteDurationPattern)) {
     const note = match.groups!["note"] ?? "C4";
     const duration = match.groups!["duration"] ?? "8n";
-    next.synthState.note = note;
-    next.synthState.duration = duration;
+    next.instrument.note = note;
+    next.instrument.duration = duration;
   }
 
   const synthTypePattern = new RegExp(/@(?<synthType>[^\W]+)\b/gi);
@@ -24,24 +21,24 @@ function produceEditedSequencer(
     const synthType = match.groups!["synthType"] ?? "sine";
     const validSynthTypes = ["duo", "am", "fm", "membrane", "sine"];
     if (validSynthTypes.includes(synthType)) {
-      next.synthState.type = synthType;
+      next.instrument.type = synthType;
     }
   }
 
   const stepsPattern = new RegExp(/\bs(?<steps>[0-9]+)\b/gi);
   for (let match of newInput.matchAll(stepsPattern)) {
     const steps = +match.groups!["steps"] ?? 16;
-    next.steps = steps;
-    if (steps > next.sequence.length) {
-      for (let i = next.sequence.length; i < steps; i++) {
-        next.sequence.push(false);
+    next.sequencer.steps = steps;
+    if (steps > next.sequencer.sequence.length) {
+      for (let i = next.sequencer.sequence.length; i < steps; i++) {
+        next.sequencer.sequence.push(false);
       }
     }
   }
   const volumePattern = new RegExp(/\b(?<volume>[0-9]+)%\B/gi);
   for (let match of newInput.matchAll(volumePattern)) {
     const volume = +match.groups!["volume"] ?? 100.0;
-    next.synthState.gain = volume / 100.0;
+    next.instrument.gain = volume / 100.0;
   }
 
   return next;
@@ -50,37 +47,35 @@ function produceEditedSequencer(
 interface TrackEditorProps {
   track: Track;
   globalSequenceCounter: number;
-  onChange: (next: SequencerState) => void;
+  onChange: (next: Track) => void;
 }
 
 export function TrackEditor(props: TrackEditorProps) {
   const [input, setInput] = useState(
-    `${props.track.synth?.note}/${props.track.synth?.duration}`
+    `${props.track.instrument?.note}/${props.track.instrument?.duration}`
   );
   const onChangeInput = useCallback(
     (e: ChangeEvent<HTMLInputElement>) => {
-      console.log("Changing to ", e.target.value);
       setInput(e.target.value);
-      const next = produceEditedSequencer(props.track.sequencer!, e.target.value);
-      if (JSON.stringify(props.track.sequencer) != JSON.stringify(next)) {
-        console.log("Updating sequencer in parent");
+      const next = produceEditedTrack(props.track, e.target.value);
+      if (JSON.stringify(props.track) != JSON.stringify(next)) {
         props.onChange(next);
       }
     },
-    [props.sequencer]
+    [props.track]
   );
 
-  const routeToKeyboard = props.sequencer.synthState.routeToKeyboard;
+  const routeToKeyboard = props.track.instrument.routeToKeyboard;
 
   const onToggleRouteToKeyboard = useCallback(() => {
-    const next: SequencerState = structuredClone(props.sequencer);
-    next.synthState.routeToKeyboard = !routeToKeyboard;
+    const next: Track = structuredClone(props.track);
+    next.instrument.routeToKeyboard = !routeToKeyboard;
     props.onChange(next);
   }, [routeToKeyboard]);
 
   function toggleStep(step: number): void {
-    const next: SequencerState = structuredClone(props.sequencer);
-    next.sequence[step] = !next.sequence[step];
+    const next: Track = structuredClone(props.track);
+    next.sequencer.sequence[step] = !next.sequencer.sequence[step];
     props.onChange(next);
   }
 
@@ -100,18 +95,18 @@ export function TrackEditor(props: TrackEditorProps) {
           {routeToKeyboard ? "Disconnect" : "Route to Keyboard"}
         </button>
       </th>
-      {range(props.sequencer.steps).map((step) => (
+      {range(props.track.sequencer.steps).map((step) => (
         <td
           key={step}
           className={
-            step == props.globalSequenceCounter % props.sequencer.steps
+            step == props.globalSequenceCounter % props.track.sequencer.steps
               ? "active"
               : ""
           }
         >
           <input
             type="checkbox"
-            checked={props.sequencer.sequence[step] ?? false}
+            checked={props.track.sequencer.sequence[step] ?? false}
             onChange={() => toggleStep(step)}
           />
         </td>

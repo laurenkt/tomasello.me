@@ -1,16 +1,17 @@
 import * as Tone from "tone";
 import { ToneAudioNode } from "tone";
-import { SequencerState } from "../models/SequencerState";
-import { SynthState } from "../models/SynthState";
+import { SequencerConfig } from "../models/SequencerConfig";
+import { InstrumentConfig } from "../models/InstrumentConfig";
 import { AudioInstrument } from "./AudioInstrument";
+import { Track } from "../models/Track";
 
 export interface AudioPipelineConfig {
   onCounterIncrement: (t: number) => void;
 }
 
-function instrumentFrom(synthState: SynthState): AudioInstrument {
+function instrumentFrom(config: InstrumentConfig): AudioInstrument {
   let toneAudioNode: ToneAudioNode;
-  switch (synthState.type) {
+  switch (config.type) {
     case "am":
       toneAudioNode = new Tone.AMSynth();
       break;
@@ -36,9 +37,9 @@ function instrumentFrom(synthState: SynthState): AudioInstrument {
   }
   return new AudioInstrument(
     toneAudioNode,
-    synthState.gain,
-    synthState.note,
-    synthState.duration
+    config.gain,
+    config.note,
+    config.duration
   );
 }
 
@@ -47,13 +48,13 @@ export class AudioPipeline {
   private counter = 0;
   private instruments = [] as AudioInstrument[];
   private hashes = [] as string[];
-  private sequences = [] as SequencerState[];
+  private sequencers = [] as SequencerConfig[];
 
   constructor(config: AudioPipelineConfig) {
     this.loop = new Tone.Loop((time) => {
       this.counter += 1;
 
-      this.sequences.forEach((sequence, idx) => {
+      this.sequencers.forEach((sequence, idx) => {
         if (sequence.sequence[this.counter % sequence.steps]) {
           this.instruments[idx].triggerAttackRelease(time);
         }
@@ -73,30 +74,30 @@ export class AudioPipeline {
     this.loop.stop();
   }
 
-  private hash(sequencerState: SequencerState): string {
-    return JSON.stringify(sequencerState);
+  private hash(track: Track): string {
+    return JSON.stringify(track);
   }
 
-  setSequencers(sequencers: SequencerState[]) {
-    while (this.instruments.length > sequencers.length) {
+  setTracks(tracks: Track[]) {
+    while (this.instruments.length > tracks.length) {
       // Remove old instruments
       const last = this.instruments.pop()!;
       this.hashes.pop();
-      this.sequences.pop();
+      this.sequencers.pop();
       last.dispose();
     }
     // Replace any that changed
-    sequencers.forEach((sequencer, idx) => {
-      const hash = this.hash(sequencer);
+    tracks.forEach((track, idx) => {
+      const hash = this.hash(track);
       if (hash !== this.hashes[idx]) {
         this.hashes[idx] = hash;
-        this.instruments[idx] = instrumentFrom(sequencer.synthState);
+        this.instruments[idx] = instrumentFrom(track.instrument);
       }
     });
-    this.sequences = sequencers;
+    this.sequencers = tracks.map((t) => t.sequencer);
   }
 
-  attackWithSynth(synth: SynthState, degree: number) {
+  attackWithSynth(synth: InstrumentConfig, degree: number) {
     const copy = structuredClone(synth);
     const tonic = Tone.Frequency(synth.note).toMidi();
     copy.note = Tone.Frequency(tonic + degree, "midi").toNote();

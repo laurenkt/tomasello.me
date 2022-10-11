@@ -1,11 +1,11 @@
 import { useCallback, useEffect, useState } from "react";
 import { TrackEditor } from "./TrackEditor";
 import { Keyboard } from "./Keyboard";
-import { SequencerState } from "../models/SequencerState";
 import { range } from "../range";
 import { AudioPipeline } from "../audio/AudioPipeline";
-
-let t = 0;
+import { Track } from "../models/Track";
+import { InstrumentConfig } from "../models/InstrumentConfig";
+import { nanoid } from "nanoid";
 
 let audioPipeline: AudioPipeline;
 
@@ -15,12 +15,15 @@ export default function Workstation() {
   const [bpm, setBpm] = useState(180);
   const [isPaused, setPaused] = useState(false);
   const [globalStepIncrement, setGlobalStepIncrement] = useState(0);
-  const [sequencers, setSequencers] = useState(
-    defaultNotes.map((note): SequencerState => {
+  const [tracks, setTracks] = useState(
+    defaultNotes.map((note): Track => {
       return {
-        sequence: range(16).map(() => false),
-        steps: 16,
-        synthState: {
+        id: nanoid(),
+        sequencer: {
+          sequence: range(16).map(() => false),
+          steps: 16,
+        },
+        instrument: {
           duration: "8n",
           gain: 1,
           note: note,
@@ -31,12 +34,15 @@ export default function Workstation() {
     })
   );
 
-  const onAddSequencerRow = useCallback(() => {
-    const delta: SequencerState[] = [
+  const onAddTrack = useCallback(() => {
+    const delta: Track[] = [
       {
-        sequence: range(16).map(() => false),
-        steps: 16,
-        synthState: {
+        id: nanoid(),
+        sequencer: {
+          sequence: range(16).map(() => false),
+          steps: 16,
+        },
+        instrument: {
           duration: "8n",
           gain: 1,
           note: "C4",
@@ -45,14 +51,13 @@ export default function Workstation() {
         },
       },
     ];
-    setSequencers((s) => s.concat(delta));
-  }, [sequencers]);
+    setTracks((s) => s.concat(delta));
+  }, [tracks]);
 
-  function onChangeSequencer(idx: number, next: SequencerState) {
-    const replacement = [...sequencers];
-    replacement[idx] = next;
-    setSequencers((s) => {
-      const copy: SequencerState[] = structuredClone(s);
+  function onChangeTrack(next: Track) {
+    setTracks((s) => {
+      const copy: Track[] = structuredClone(s);
+      const idx = copy.findIndex((s) => s.id === next.id);
       copy[idx] = next;
       return copy;
     });
@@ -67,8 +72,8 @@ export default function Workstation() {
   }, []);
 
   useEffect(() => {
-    audioPipeline.setSequencers(sequencers);
-  }, [sequencers]);
+    audioPipeline.setTracks(tracks);
+  }, [tracks]);
 
   const [activeKeys, setActiveKeys] = useState(range(12).map(() => false));
 
@@ -87,18 +92,18 @@ export default function Workstation() {
   };
 
   useEffect(() => {
-    const keyboardEnabled = sequencers
-      .map((s) => s.synthState)
-      .filter((s) => s.routeToKeyboard);
+    const keyboardEnabled: InstrumentConfig[] = tracks
+      .filter((track) => track.instrument?.routeToKeyboard)
+      .map((track) => track.instrument!);
 
-    for (const synth of keyboardEnabled) {
+    for (const instrument of keyboardEnabled) {
       for (let degree = 0; degree < activeKeys.length; degree++) {
         if (activeKeys[degree]) {
-          audioPipeline.attackWithSynth(synth, degree);
+          audioPipeline.attackWithSynth(instrument, degree);
         }
       }
     }
-  }, [activeKeys, sequencers]);
+  }, [activeKeys, tracks]);
 
   return (
     <>
@@ -132,26 +137,21 @@ export default function Workstation() {
       />
       <table>
         <tbody>
-          {sequencers.map((sequencer, idx) => (
+          {tracks.map((track) => (
             <TrackEditor
-              key={idx}
-              sequencer={sequencer}
-              onChange={(next) => onChangeSequencer(idx, next)}
+              key={track.id}
+              track={track}
+              onChange={(next) => onChangeTrack(next)}
               globalSequenceCounter={globalStepIncrement}
             />
           ))}
         </tbody>
       </table>
-      <button onClick={onAddSequencerRow}>➕ Add Sequencer Row</button>
+      <button onClick={onAddTrack}>➕ Add Track</button>
       <h3>Keyboard</h3>
       <div>
         Synths connected to keyboard:{" "}
-        {sequencers.filter((s) => s.synthState.routeToKeyboard).length}
-        <p>
-          {activeKeys.map((down, degree) => (
-            <span key={degree}>{down ? "1" : "."} </span>
-          ))}
-        </p>
+        {tracks.filter((track) => track.instrument?.routeToKeyboard).length}
         <Keyboard onAttack={setActiveKey} onRelease={removeActiveKey} />
       </div>
     </>

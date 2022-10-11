@@ -1,7 +1,8 @@
-import { SequencerState } from "./SequencerState";
-import { SynthState } from "./SynthState";
+import { SequencerConfig } from "./SequencerConfig";
+import { InstrumentConfig } from "./InstrumentConfig";
 
 export interface Track {
-    sequencer?: SequencerState
-    synth?: SynthState
+  id: string;
+  sequencer: SequencerConfig;
+  instrument: InstrumentConfig;
 }
