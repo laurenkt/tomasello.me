@@ -1,5 +1,6 @@
 import { ChangeEvent, useCallback, useState } from "react";
 import { SequencerState } from "../models/SequencerState";
+import { Track } from "../models/Track";
 import { range } from "../range";
 
 function produceEditedSequencer(
@@ -46,22 +47,22 @@ function produceEditedSequencer(
   return next;
 }
 
-interface SequencerEditorProps {
-  sequencer: SequencerState;
+interface TrackEditorProps {
+  track: Track;
   globalSequenceCounter: number;
   onChange: (next: SequencerState) => void;
 }
 
-export function SequencerEditor(props: SequencerEditorProps) {
+export function TrackEditor(props: TrackEditorProps) {
   const [input, setInput] = useState(
-    `${props.sequencer.synthState.note}/${props.sequencer.synthState.duration}`
+    `${props.track.synth?.note}/${props.track.synth?.duration}`
   );
   const onChangeInput = useCallback(
     (e: ChangeEvent<HTMLInputElement>) => {
       console.log("Changing to ", e.target.value);
       setInput(e.target.value);
-      const next = produceEditedSequencer(props.sequencer, e.target.value);
-      if (JSON.stringify(props.sequencer) != JSON.stringify(next)) {
+      const next = produceEditedSequencer(props.track.sequencer!, e.target.value);
+      if (JSON.stringify(props.track.sequencer) != JSON.stringify(next)) {
         console.log("Updating sequencer in parent");
         props.onChange(next);
       }

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { SequencerEditor } from "./SequencerEditor";
+import { TrackEditor } from "./TrackEditor";
 import { Keyboard } from "./Keyboard";
 import { SequencerState } from "../models/SequencerState";
 import { range } from "../range";
@@ -133,7 +133,7 @@ export default function Workstation() {
       <table>
         <tbody>
           {sequencers.map((sequencer, idx) => (
-            <SequencerEditor
+            <TrackEditor
               key={idx}
               sequencer={sequencer}
               onChange={(next) => onChangeSequencer(idx, next)}
