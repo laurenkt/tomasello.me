@@ -6,16 +6,18 @@ import { AudioPipeline } from "../audio/AudioPipeline";
 import { Track } from "../models/Track";
 import { InstrumentConfig } from "../models/InstrumentConfig";
 import { nanoid } from "nanoid";
+import { useLocalStorage } from "usehooks-ts";
 
 let audioPipeline: AudioPipeline;
 
 const defaultNotes = ["C4", "D4", "E4", "F4", "G4", "A5", "B5"];
 
 export default function Workstation() {
-  const [bpm, setBpm] = useState(180);
+  const [bpm, setBpm] = useLocalStorage("bpm", 180);
   const [isPaused, setPaused] = useState(false);
   const [globalStepIncrement, setGlobalStepIncrement] = useState(0);
-  const [tracks, setTracks] = useState(
+  const [tracks, setTracks] = useLocalStorage(
+    "tracks",
     defaultNotes.map((note): Track => {
       return {
         id: nanoid(),
@@ -29,6 +31,7 @@ export default function Workstation() {
           note: note,
           routeToKeyboard: false,
           type: "sine",
+          effects: [],
         },
       };
     })
@@ -48,6 +51,7 @@ export default function Workstation() {
           note: "C4",
           type: "sine",
           routeToKeyboard: false,
+          effects: [],
         },
       },
     ];

@@ -35,7 +35,31 @@ function instrumentFrom(config: InstrumentConfig): AudioInstrument {
       toneAudioNode = new Tone.Synth();
       break;
   }
+
+  const root = toneAudioNode;
+
+  // apply any effects
+  for (const effectConfig of config.effects) {
+    let effect: ToneAudioNode;
+    switch (effectConfig.type) {
+      case "reverb":
+        effect = new Tone.Reverb();
+        break;
+      case "delay":
+        effect = new Tone.Delay("16n");
+        break;
+      case "distortion":
+        effect = new Tone.Distortion(0.8);
+        break;
+      default:
+        continue;
+    }
+    toneAudioNode.connect(effect);
+    toneAudioNode = effect;
+  }
+
   return new AudioInstrument(
+    root,
     toneAudioNode,
     config.gain,
     config.note,

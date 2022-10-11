@@ -2,14 +2,18 @@ import { ChangeEvent, useCallback, useState } from "react";
 import { SequencerConfig } from "../models/SequencerConfig";
 import { Track } from "../models/Track";
 import { range } from "../range";
+import { EffectConfig } from "../models/EffectConfig";
 
 function produceEditedTrack(track: Track, newInput: string): Track {
   const next: Track = structuredClone(track);
 
+  // instrument parts are separated by vertical bar |
+  const parts = newInput.split("|");
+
   const noteDurationPattern = new RegExp(
     /(?<note>[^\W]+)\/(?<duration>[^\W]+)\b$/gi
   );
-  for (let match of newInput.matchAll(noteDurationPattern)) {
+  for (let match of parts[0].matchAll(noteDurationPattern)) {
     const note = match.groups!["note"] ?? "C4";
     const duration = match.groups!["duration"] ?? "8n";
     next.instrument.note = note;
@@ -17,7 +21,7 @@ function produceEditedTrack(track: Track, newInput: string): Track {
   }
 
   const synthTypePattern = new RegExp(/@(?<synthType>[^\W]+)\b/gi);
-  for (let match of newInput.matchAll(synthTypePattern)) {
+  for (let match of parts[0].matchAll(synthTypePattern)) {
     const synthType = match.groups!["synthType"] ?? "sine";
     const validSynthTypes = ["duo", "am", "fm", "membrane", "sine"];
     if (validSynthTypes.includes(synthType)) {
@@ -26,7 +30,7 @@ function produceEditedTrack(track: Track, newInput: string): Track {
   }
 
   const stepsPattern = new RegExp(/\bs(?<steps>[0-9]+)\b/gi);
-  for (let match of newInput.matchAll(stepsPattern)) {
+  for (let match of parts[0].matchAll(stepsPattern)) {
     const steps = +match.groups!["steps"] ?? 16;
     next.sequencer.steps = steps;
     if (steps > next.sequencer.sequence.length) {
@@ -36,10 +40,32 @@ function produceEditedTrack(track: Track, newInput: string): Track {
     }
   }
   const volumePattern = new RegExp(/\b(?<volume>[0-9]+)%\B/gi);
-  for (let match of newInput.matchAll(volumePattern)) {
+  for (let match of parts[0].matchAll(volumePattern)) {
     const volume = +match.groups!["volume"] ?? 100.0;
     next.instrument.gain = volume / 100.0;
   }
+
+  // match remaining parts
+  const remainingParts = parts.slice(1);
+
+  // each part is an effect that is chained on
+  // effects start with @ just like instruments
+  const effects: EffectConfig[] = [];
+
+  for (let part of remainingParts) {
+    const effectPattern = new RegExp(/@(?<effectType>[^\W]+)\b/gi);
+    for (let match of part.matchAll(effectPattern)) {
+      const effectType = match.groups!["effectType"];
+      const validEffectTypes = ["reverb", "delay", "distortion"];
+      if (validEffectTypes.includes(effectType)) {
+        effects.push({
+          type: effectType,
+        });
+      }
+    }
+  }
+
+  next.instrument.effects = effects;
 
   return next;
 }
