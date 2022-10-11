@@ -3,7 +3,7 @@ import { SequencerEditor } from "./SequencerEditor";
 import { Keyboard } from "./Keyboard";
 import { SequencerState } from "../models/SequencerState";
 import { range } from "../range";
-import { AudioPipeline } from "../AudioPipeline";
+import { AudioPipeline } from "../audio/AudioPipeline";
 
 let t = 0;
 
@@ -34,7 +34,7 @@ export default function Workstation() {
   const onAddSequencerRow = useCallback(() => {
     const delta: SequencerState[] = [
       {
-        sequence: range(8).map(() => false),
+        sequence: range(16).map(() => false),
         steps: 16,
         synthState: {
           duration: "8n",
@@ -72,8 +72,8 @@ export default function Workstation() {
 
   const [activeKeys, setActiveKeys] = useState(range(12).map(() => false));
 
-  function setAtIndex(to: boolean, bools: boolean[], idx: number): boolean[] {
-    const copy = [...bools];
+  function setAtIndex(to: boolean, array: boolean[], idx: number): boolean[] {
+    const copy = [...array];
     copy[idx] = to;
     return copy;
   }

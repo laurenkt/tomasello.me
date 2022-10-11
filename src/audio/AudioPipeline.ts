@@ -1,32 +1,11 @@
 import * as Tone from "tone";
-import { SequencerState } from "./models/SequencerState";
-import { SynthState } from "./models/SynthState";
 import { ToneAudioNode } from "tone";
-import { Instrument } from "tone/build/esm/instrument/Instrument";
+import { SequencerState } from "../models/SequencerState";
+import { SynthState } from "../models/SynthState";
+import { AudioInstrument } from "./AudioInstrument";
 
 export interface AudioPipelineConfig {
   onCounterIncrement: (t: number) => void;
-}
-
-class AudioInstrument {
-  private readonly gainNode: Tone.Gain;
-  constructor(
-    private instrument: Tone.ToneAudioNode,
-    gain: number,
-    private note: string,
-    private duration: string
-  ) {
-    this.gainNode = new Tone.Gain(gain).toDestination();
-    this.instrument.connect(this.gainNode);
-  }
-  dispose() {
-    this.instrument.dispose();
-    this.gainNode.dispose();
-  }
-  triggerAttackRelease(time: number): void {
-    // @ts-ignore Tone doesn't expose the Instrument type?
-    this.instrument.triggerAttackRelease(this.note, this.duration, time);
-  }
 }
 
 function instrumentFrom(synthState: SynthState): AudioInstrument {
