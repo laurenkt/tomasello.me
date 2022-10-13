@@ -3,6 +3,7 @@ import { SequencerConfig } from "../models/SequencerConfig";
 import { Track } from "../models/Track";
 import { range } from "../range";
 import { EffectConfig } from "../models/EffectConfig";
+import { InstrumentConfig } from "../models/InstrumentConfig";
 
 function produceEditedTrack(track: Track, newInput: string): Track {
   const next: Track = structuredClone(track);
@@ -76,9 +77,21 @@ interface TrackEditorProps {
   onChange: (next: Track) => void;
 }
 
+function instrumentToString(instrument: InstrumentConfig): string {
+  const effects =
+    instrument.effects.length === 0
+      ? ""
+      : " | " +
+        instrument.effects.map((effect) => `@${effect.type}`).join(" | ");
+  const type = instrument.type === "sine" ? "" : ` @${instrument.type}`;
+  const volume =
+    instrument.gain === 1 ? "" : ` ${Math.round(instrument.gain * 100)}%`;
+  return `${instrument.note}/${instrument.duration}${type}${volume}${effects}`;
+}
+
 export function TrackEditor(props: TrackEditorProps) {
   const [input, setInput] = useState(
-    `${props.track.instrument?.note}/${props.track.instrument?.duration}`
+    instrumentToString(props.track.instrument)
   );
   const onChangeInput = useCallback(
     (e: ChangeEvent<HTMLInputElement>) => {
